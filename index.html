@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Trader Desk</title>
+<style>
+  :root {
+    --bg: #0b0d10;
+    --panel: #11151a;
+    --panel-2: #161b21;
+    --line: #232a32;
+    --ink: #e8ecf1;
+    --ink-2: #9aa5b1;
+    --ink-3: #5f6b78;
+    --up: #4fd18b;
+    --down: #ff6b6b;
+    --warn: #f5c451;
+    --accent: #7cc4ff;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 var(--sans); }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 20px 16px 64px; }
+  header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px 18px; padding: 8px 0 18px; border-bottom: 1px solid var(--line); }
+  header h1 { font: 600 20px/1.2 var(--sans); margin: 0; letter-spacing: 0.01em; }
+  .label { font: 500 11px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3); }
+  .chip { display: inline-block; font: 500 11px/1 var(--mono); letter-spacing: 0.06em; text-transform: uppercase; padding: 5px 8px; border: 1px solid var(--line); border-radius: 999px; color: var(--ink-2); }
+  .chip.paper { color: var(--warn); border-color: rgba(245,196,81,.35); }
+  .chip.open { color: var(--up); border-color: rgba(79,209,139,.35); }
+  .chip.ok { color: var(--up); border-color: rgba(79,209,139,.35); }
+  .chip.bad { color: var(--down); border-color: rgba(255,107,107,.35); }
+  .chip.warn { color: var(--warn); border-color: rgba(245,196,81,.35); }
+  .meta { color: var(--ink-2); font-size: 13px; }
+  section { margin-top: 28px; }
+  section h2 { font: 600 13px/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); margin: 0 0 12px; display: flex; align-items: center; gap: 12px; }
+  section h2::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+  .tile { background: var(--panel); padding: 14px 16px; min-height: 86px; }
+  .tile .label { margin-bottom: 8px; }
+  .tile .v { font: 600 24px/1.1 var(--mono); letter-spacing: -0.01em; }
+  .tile .s { color: var(--ink-2); font-size: 12px; margin-top: 6px; font-family: var(--mono); }
+  .up { color: var(--up); } .down { color: var(--down); } .muted { color: var(--ink-3); }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 760px) { .grid-2 { grid-template-columns: 1fr; } }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th { text-align: left; font: 500 11px/1 var(--mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-3); padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  td { padding: 9px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tr:last-child td { border-bottom: 0; }
+  td.n, th.n { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  td.t { font-family: var(--mono); font-weight: 600; }
+  .scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .empty { color: var(--ink-3); padding: 18px 0; text-align: center; font-size: 13.5px; }
+  .note { color: var(--ink-2); font-size: 13px; margin-top: 10px; }
+  .bar { height: 4px; background: var(--line); border-radius: 2px; overflow: hidden; margin-top: 6px; }
+  .bar > i { display: block; height: 100%; background: var(--accent); }
+  .held { color: var(--warn); font-weight: 600; }
+  .banner { border-left: 3px solid var(--warn); background: var(--panel-2); padding: 12px 14px; border-radius: 8px; margin-bottom: 14px; }
+  .steps { display: flex; flex-wrap: wrap; gap: 8px; }
+  .step { font: 12px/1.4 var(--mono); padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel-2); }
+  .step b { display: block; font-weight: 600; }
+  footer { margin-top: 44px; padding-top: 16px; border-top: 1px solid var(--line); color: var(--ink-3); font-size: 12.5px; }
+  /* unlock */
+  #lock { max-width: 420px; margin: 12vh auto 0; }
+  #lock .card { padding: 22px 20px; }
+  #lock h1 { font: 600 20px/1.2 var(--sans); margin: 0 0 6px; }
+  #lock p { color: var(--ink-2); font-size: 13.5px; margin: 0 0 16px; }
+  input[type=password] { width: 100%; font: 16px var(--mono); padding: 11px 12px; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; outline: none; }
+  input[type=password]:focus { border-color: var(--accent); }
+  button { margin-top: 12px; width: 100%; font: 600 14px var(--sans); padding: 11px; border-radius: 8px; border: 1px solid var(--accent); background: var(--accent); color: #06111c; cursor: pointer; }
+  button:disabled { opacity: .6; cursor: progress; }
+  .row { display: flex; align-items: center; gap: 8px; margin-top: 12px; color: var(--ink-2); font-size: 13px; }
+  .err { color: var(--down); font-size: 13px; margin-top: 10px; min-height: 1.2em; }
+  .linkbtn { background: none; border: 0; color: var(--ink-3); font: 12px var(--mono); width: auto; margin: 0; padding: 0; cursor: pointer; }
+  .linkbtn:hover { color: var(--ink); }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div id="lock">
+    <div class="card">
+      <h1>Trader Desk</h1>
+      <p>The snapshot is encrypted. Enter the dashboard passphrase to read it on this device.</p>
+      <form id="unlock-form">
+        <input id="pass" type="password" autocomplete="current-password" placeholder="passphrase" autofocus>
+        <label class="row"><input id="remember" type="checkbox"> Remember on this device</label>
+        <button id="unlock-btn" type="submit">Unlock</button>
+        <div id="lock-err" class="err"></div>
+      </form>
+    </div>
+  </div>
+
+  <div id="app" hidden>
+    <header>
+      <h1>Trader Desk</h1>
+      <span id="chip-paper" class="chip paper">paper</span>
+      <span id="chip-market" class="chip">market</span>
+      <span id="gen" class="meta"></span>
+      <span style="flex:1"></span>
+      <button class="linkbtn" id="forget">forget passphrase</button>
+    </header>
+
+    <section id="s-project">
+      <h2>The $500 project</h2>
+      <div class="tiles" id="tiles"></div>
+      <div class="note" id="project-note"></div>
+    </section>
+
+    <section id="s-positions">
+      <h2>Positions</h2>
+      <div class="card scroll"><table id="positions"></table></div>
+    </section>
+
+    <section id="s-orders">
+      <h2>Orders</h2>
+      <div class="card scroll"><table id="orders"></table></div>
+      <div class="note" id="orders-note"></div>
+    </section>
+
+    <section id="s-congress">
+      <h2>Congress trades</h2>
+      <div id="held-banner"></div>
+      <div class="grid-2">
+        <div class="card"><div class="label" style="margin-bottom:8px">Most bought, last 45 days</div><table id="most-bought"></table></div>
+        <div class="card"><div class="label" style="margin-bottom:8px">Most sold, last 45 days</div><table id="most-sold"></table></div>
+      </div>
+      <div class="card scroll" style="margin-top:14px"><table id="congress-rows"></table></div>
+      <button class="linkbtn" id="congress-more" style="margin-top:8px" hidden></button>
+      <div class="note" id="congress-note"></div>
+    </section>
+
+    <section id="s-watch">
+      <h2>Watching</h2>
+      <div class="grid-2">
+        <div class="card" id="thirteenf"></div>
+        <div class="card" id="alerts"></div>
+      </div>
+    </section>
+
+    <section id="s-account">
+      <h2>Whole paper account</h2>
+      <div class="tiles" id="acct-tiles"></div>
+      <div class="card scroll" style="margin-top:14px"><table id="acct-positions"></table></div>
+      <div class="note" id="acct-note"></div>
+    </section>
+
+    <section id="s-run">
+      <h2>Last run</h2>
+      <div class="steps" id="run-steps"></div>
+      <div class="note" id="run-note"></div>
+    </section>
+
+    <footer>
+      Education and tooling, not financial advice. Paper account: no real money moves. Orders are placed only in the chat, one typed yes each.
+    </footer>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var fmt = {
+    usd: function (x, d) { if (x === null || x === undefined || isNaN(x)) return '?'; d = d === undefined ? 2 : d; return (x < 0 ? '-$' : '$') + Math.abs(x).toLocaleString('en-US', { minimumFractionDigits: d, maximumFractionDigits: d }); },
+    pct: function (x) { if (x === null || x === undefined || isNaN(x)) return '?'; return (x > 0 ? '+' : '') + x.toFixed(2) + '%'; },
+    qty: function (x) { if (x === null || x === undefined) return '?'; return Number(x).toLocaleString('en-US', { maximumFractionDigits: 4 }); },
+    when: function (iso) { if (!iso) return '?'; var d = new Date(iso); if (isNaN(d)) return iso; return d.toLocaleString('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + ' NY'; },
+    day: function (iso) { return iso ? String(iso).slice(0, 10) : '?'; }
+  };
+  function esc(s) { return String(s === null || s === undefined ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function sign(x) { return x > 0 ? 'up' : x < 0 ? 'down' : 'muted'; }
+  function tile(label, value, sub, cls) { return '<div class="tile"><div class="label">' + esc(label) + '</div><div class="v ' + (cls || '') + '">' + value + '</div>' + (sub ? '<div class="s">' + sub + '</div>' : '') + '</div>'; }
+  function table(el, head, rows, empty) {
+    if (!rows.length) { el.innerHTML = '<tr><td class="empty" colspan="' + head.length + '">' + esc(empty) + '</td></tr>'; return; }
+    el.innerHTML = '<thead><tr>' + head.map(function (h) { return '<th' + (h.n ? ' class="n"' : '') + '>' + esc(h.t) + '</th>'; }).join('') + '</tr></thead><tbody>' + rows.join('') + '</tbody>';
+  }
+  function chip(text, cls) { return '<span class="chip ' + (cls || '') + '">' + esc(text) + '</span>'; }
+  function statusClass(s) { s = String(s || ''); if (s.indexOf('filled') === 0) return 'ok'; if (/denied|failed|rejected|canceled|expired/.test(s)) return 'bad'; if (s.indexOf('placed') === 0) return 'warn'; return ''; }
+
+  var showAll = false, lastData = null;
+  function render(d) {
+    lastData = d;
+    var p = d.project || {}, cfg = d.config || {};
+    $('chip-paper').textContent = d.paper ? 'paper account' : 'LIVE';
+    $('chip-paper').className = 'chip ' + (d.paper ? 'paper' : 'bad');
+    var m = d.market;
+    if (m) { $('chip-market').textContent = m.open ? 'NYSE open' : 'NYSE closed'; $('chip-market').className = 'chip ' + (m.open ? 'open' : ''); $('chip-market').title = m.open ? ('closes ' + (m.closes || '')) : ('next open ' + (m.next_open || '')); }
+    else { $('chip-market').textContent = 'market ?'; }
+    $('gen').textContent = 'snapshot ' + fmt.when(d.generated_at) + (d.prices_as_of ? ', prices ' + fmt.when(d.prices_as_of) : '');
+
+    // project tiles
+    var tiles = [tile('Budget', fmt.usd(p.budget, 0), 'cap per stock ' + (cfg.max_position_pct || '?') + '%')];
+    if (p.has_lots) {
+      tiles.push(tile('Cash left', fmt.usd(p.cash), 'of the budget'));
+      tiles.push(tile('Invested', fmt.usd(p.invested_cost), 'cost of the lots'));
+      tiles.push(tile('Market value', fmt.usd(p.market_value), p.total !== null ? 'total ' + fmt.usd(p.total) : 'waiting for prices'));
+      tiles.push(tile('Gain', fmt.usd(p.gain), fmt.pct(p.gain_pct), sign(p.gain)));
+    } else {
+      var queued = (d.orders && d.orders.planned || []).filter(function (o) { return String(o.status).indexOf('placed') === 0; });
+      var committed = queued.reduce(function (s, o) { return s + (o.notional || 0); }, 0);
+      tiles.push(tile('Cash', fmt.usd(p.cash), 'nothing filled yet'));
+      tiles.push(tile('Queued', fmt.usd(committed), queued.length + ' order' + (queued.length === 1 ? '' : 's') + ' waiting to fill', 'muted'));
+      tiles.push(tile('Market value', '?', 'after the first fill', 'muted'));
+    }
+    $('tiles').innerHTML = tiles.join('');
+    var t = d.targets || {};
+    $('project-note').textContent = t.source ? 'Copying ' + t.source + '.' : '';
+
+    // positions
+    var rows = (p.positions || []).map(function (x) {
+      var w = x.weight !== null && x.weight !== undefined ? x.weight : null;
+      return '<tr><td class="t">' + esc(x.ticker) + '<div class="muted" style="font:12px var(--sans)">' + esc(x.name) + '</div></td>' +
+        '<td class="n">' + fmt.qty(x.shares) + '</td><td class="n">' + fmt.usd(x.cost) + '</td><td class="n">' + fmt.usd(x.price) + '</td>' +
+        '<td class="n">' + fmt.usd(x.value) + '</td><td class="n ' + sign(x.gain) + '">' + fmt.usd(x.gain) + '<div style="font-size:11px">' + fmt.pct(x.gain_pct) + '</div></td>' +
+        '<td class="n">' + (w === null ? '?' : w.toFixed(1) + '%') + '<div class="muted" style="font-size:11px">target ' + (x.target_weight !== null && x.target_weight !== undefined ? x.target_weight.toFixed(1) + '%' : '?') + '</div>' +
+        '<div class="bar"><i style="width:' + Math.min(100, w || 0) + '%"></i></div></td></tr>';
+    });
+    table($('positions'), [{ t: 'stock' }, { t: 'shares', n: 1 }, { t: 'cost', n: 1 }, { t: 'price', n: 1 }, { t: 'value', n: 1 }, { t: 'gain', n: 1 }, { t: 'weight', n: 1 }], rows,
+      'No lots yet. The first fill creates them, usually within a minute of the 9:30 open.');
+
+    // orders
+    var o = d.orders || {};
+    rows = (o.planned || []).map(function (x) {
+      var f = x.fill;
+      var what = esc(x.side).toUpperCase() + ' ' + (x.notional ? fmt.usd(x.notional, 0) + ' of ' : (x.qty ? fmt.qty(x.qty) + ' shares of ' : '')) + '<b>' + esc(x.symbol) + '</b>';
+      var detail = f ? fmt.qty(f.qty) + ' shares at ' + fmt.usd(f.price) + ', ' + fmt.when(f.at) : (x.at ? fmt.when(x.at) : '');
+      return '<tr><td class="n muted">' + x.index + '</td><td>' + what + '<div class="muted" style="font-size:12px">' + esc(x.type) + ', ' + esc(x.time_in_force) + (x.reply ? ', your reply "' + esc(x.reply) + '"' : '') + '</div></td>' +
+        '<td>' + chip(x.status, statusClass(x.status)) + '<div class="muted" style="font-size:12px;margin-top:4px">' + detail + '</div></td>' +
+        '<td>' + (x.risk ? chip('risk ' + x.risk, x.risk === 'PASS' ? 'ok' : 'bad') : '') + '</td></tr>';
+    });
+    table($('orders'), [{ t: '#', n: 1 }, { t: 'ticket' }, { t: 'status' }, { t: 'check' }], rows, 'No order tickets. Run the budget skill in the chat to size some.');
+    $('orders-note').textContent = o.source ? 'Tickets from ' + o.source + '. Every placement needed a typed yes plus an Allow once click.' : '';
+
+    // congress
+    var c = d.congress || {};
+    var hits = c.held_hits || [];
+    $('held-banner').innerHTML = hits.length ? '<div class="banner"><b>' + hits.length + ' trade' + (hits.length === 1 ? '' : 's') + ' in stocks you hold</b> in the last ' + c.window_days + ' days: ' +
+      hits.slice(0, 6).map(function (r) { return esc(r.member) + ' ' + esc((r.side || '').toLowerCase()) + ' ' + esc(r.ticker) + ' (' + esc(r.amount) + ')'; }).join('; ') + '.</div>' : '';
+    function topTable(el, list, empty) {
+      table(el, [{ t: 'ticker' }, { t: 'members', n: 1 }, { t: 'who' }], (list || []).map(function (b) {
+        return '<tr><td class="t">' + esc(b.ticker) + '</td><td class="n">' + b.members.length + '<div class="muted" style="font-size:11px">' + b.rows + ' row' + (b.rows === 1 ? '' : 's') + '</div></td><td class="muted" style="font-size:12.5px">' + esc(b.members.slice(0, 3).join(', ')) + (b.members.length > 3 ? ' +' + (b.members.length - 3) : '') + '</td></tr>';
+      }), empty);
+    }
+    topTable($('most-bought'), c.most_bought, 'No buys in the window.');
+    topTable($('most-sold'), c.most_sold, 'No sells in the window.');
+    var allRows = c.recent_rows || [];
+    rows = allRows.slice(0, showAll ? allRows.length : 20).map(function (r) {
+      var opt = r.option ? ' ' + esc(r.option.kind || 'option') + (r.option.strike ? ' $' + r.option.strike : '') : '';
+      return '<tr><td style="white-space:nowrap">' + esc(fmt.day(r.filed)) + (r.late ? ' ' + chip('late', 'warn') : '') + '</td><td>' + esc(r.member) + '<div class="muted" style="font-size:12px">' + esc(r.district) + (r.owner && r.owner !== 'self' ? ', ' + esc(r.owner) : '') + '</div></td>' +
+        '<td class="t' + (r.held ? ' held' : '') + '">' + esc(r.ticker || '?') + '<div class="muted" style="font:12px var(--sans)">' + esc(r.asset) + opt + '</div></td>' +
+        '<td>' + esc(r.side) + '</td><td class="n">' + esc(fmt.day(r.date)) + '</td><td class="n">' + esc(r.amount) + '</td><td class="n">' + (r.days_to_disclose === null || r.days_to_disclose === undefined ? '?' : r.days_to_disclose + 'd') + '</td></tr>';
+    });
+    table($('congress-rows'), [{ t: 'filed' }, { t: 'member' }, { t: 'stock' }, { t: 'side' }, { t: 'traded', n: 1 }, { t: 'amount', n: 1 }, { t: 'disclosed in', n: 1 }], rows,
+      'No filings read in the last ' + (c.window_days || 45) + ' days.');
+    var more = $('congress-more');
+    more.hidden = allRows.length <= 20;
+    more.textContent = showAll ? 'show the latest 20 only' : 'show all ' + allRows.length + ' rows';
+    $('congress-note').textContent = 'House Periodic Transaction Reports, read from the Clerk\'s PDFs. ' + (c.filings_total || 0) + ' filings and ' + (c.rows_total || 0) + ' rows on file, last check ' + fmt.when(c.last_check) + '. Members have 30 to 45 days to disclose, so these are late by design.';
+
+    // 13F watch
+    var f13 = d.thirteenf || {};
+    var latest = f13.latest || {};
+    $('thirteenf').innerHTML = '<div class="label" style="margin-bottom:8px">Berkshire 13F watch</div>' +
+      (f13.new_filing ? '<div class="banner"><b>New 13F filed ' + esc(latest.filed) + '.</b> Targets are from ' + esc(f13.targets_filed) + '. Run copycat then rebalance in the chat.</div>' : '') +
+      '<div style="font-family:var(--mono);font-size:13px">latest ' + esc(latest.form || '?') + ' for quarter ' + esc(latest.period || '?') + '<br>filed ' + esc(latest.filed || '?') + '</div>' +
+      '<div class="note">Targets built from the filing of ' + esc(f13.targets_filed || '?') + ' (quarter ' + esc(f13.targets_quarter || '?') + '). Checked ' + fmt.when(f13.checked) + '. The next 13F is due about 45 days after quarter end.</div>';
+
+    // alerts
+    var al = d.alerts || {};
+    var rules = al.rules || [];
+    $('alerts').innerHTML = '<div class="label" style="margin-bottom:8px">Price alerts</div>' +
+      (rules.length ? rules.map(function (r) { var id = r.id || ''; var rang = al.rang && al.rang[id]; return '<div style="font-family:var(--mono);font-size:13px;padding:4px 0;border-bottom:1px solid var(--line)">' + esc(id) + (rang ? ' ' + chip('rang', 'warn') : '') + '</div>'; }).join('') : '<div class="empty">No rules yet. Say "alert me when KO drops below 90" in the chat.</div>') +
+      '<div class="note">An alert is information, never an order.</div>';
+
+    // whole account
+    var a = d.account || {}, s = a.summary || {};
+    $('acct-tiles').innerHTML = s.equity !== undefined ? [
+      tile('Equity', fmt.usd(s.equity), s.last_equity ? 'yesterday ' + fmt.usd(s.last_equity) : ''),
+      tile('Cash', fmt.usd(s.cash), 'buying power ' + fmt.usd(s.buying_power, 0)),
+      tile('Stocks', fmt.usd(s.long_market_value), (a.positions || []).length + ' positions'),
+      tile('Day change', fmt.usd(s.equity - s.last_equity), fmt.pct(s.last_equity ? (s.equity - s.last_equity) / s.last_equity * 100 : null), sign(s.equity - s.last_equity))
+    ].join('') : tile('Account', '?', 'no Alpaca snapshot yet', 'muted');
+    rows = (a.positions || []).map(function (x) {
+      return '<tr><td class="t">' + esc(x.symbol) + '</td><td class="n">' + fmt.qty(x.qty) + '</td><td class="n">' + fmt.usd(x.avg_entry_price) + '</td><td class="n">' + fmt.usd(x.current_price) + '</td><td class="n">' + fmt.usd(x.market_value) + '</td><td class="n ' + sign(x.unrealized_pl) + '">' + fmt.usd(x.unrealized_pl) + '<div style="font-size:11px">' + fmt.pct(x.unrealized_plpc) + '</div></td></tr>';
+    });
+    table($('acct-positions'), [{ t: 'symbol' }, { t: 'qty', n: 1 }, { t: 'avg entry', n: 1 }, { t: 'price', n: 1 }, { t: 'value', n: 1 }, { t: 'unrealized', n: 1 }], rows, 'No positions in the paper account.');
+    var openN = (a.open_orders || []).length;
+    $('acct-note').textContent = 'Everything in the Alpaca paper account, including the older alpaca-trader bot\'s positions. ' + (openN ? openN + ' open order' + (openN === 1 ? '' : 's') + ' queued. ' : '') + (a.as_of ? 'As of ' + fmt.when(a.as_of) + '.' : '');
+
+    // run
+    var run = d.run || {}, steps = run.steps || {};
+    $('run-steps').innerHTML = Object.keys(steps).map(function (k) { var st = steps[k]; return '<div class="step"><b class="' + (st.ok ? 'up' : 'down') + '">' + esc(k) + ' ' + (st.ok ? 'ok' : 'FAIL') + '</b>' + esc(st.note || '') + '</div>'; }).join('') || '<div class="empty">No run recorded.</div>';
+    $('run-note').textContent = run.started ? 'Started ' + fmt.when(run.started) + (run.finished ? ', finished ' + fmt.when(run.finished) : '') + '. Runs weekdays before the open, after the open and after the close, plus Saturday morning.' : '';
+  }
+
+  // ---- unlock
+  function b64(s) { var bin = atob(s), u = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u; }
+  async function decrypt(doc, pass) {
+    var enc = new TextEncoder();
+    var km = await crypto.subtle.importKey('raw', enc.encode(pass), 'PBKDF2', false, ['deriveKey']);
+    var key = await crypto.subtle.deriveKey({ name: 'PBKDF2', salt: b64(doc.salt), iterations: doc.iterations || 310000, hash: 'SHA-256' }, km, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+    var pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64(doc.iv) }, key, b64(doc.ct));
+    return JSON.parse(new TextDecoder().decode(pt));
+  }
+  var store = { get: function () { try { return sessionStorage.getItem('trader-pass') || localStorage.getItem('trader-pass') || ''; } catch (e) { return ''; } },
+    set: function (p, remember) { try { sessionStorage.setItem('trader-pass', p); if (remember) localStorage.setItem('trader-pass', p); } catch (e) { } },
+    clear: function () { try { sessionStorage.removeItem('trader-pass'); localStorage.removeItem('trader-pass'); } catch (e) { } } };
+  var blob = null;
+  async function loadBlob() {
+    if (blob) return blob;
+    var r = await fetch('data.enc', { cache: 'no-store' });
+    if (r.ok) { blob = { enc: await r.json() }; return blob; }
+    if (/^(localhost|127\.0\.0\.1)$/.test(location.hostname)) {
+      var p = await fetch('data.json', { cache: 'no-store' });
+      if (p.ok) { blob = { plain: await p.json() }; return blob; }
+    }
+    throw new Error('data.enc is missing (' + r.status + '). The daily run publishes it.');
+  }
+  async function unlock(pass, remember) {
+    var b = await loadBlob();
+    var data = b.plain ? b.plain : await decrypt(b.enc, pass);
+    if (!b.plain) store.set(pass, remember);
+    render(data);
+    $('lock').hidden = true; $('app').hidden = false;
+  }
+  $('unlock-form').addEventListener('submit', async function (ev) {
+    ev.preventDefault();
+    var btn = $('unlock-btn'); btn.disabled = true; $('lock-err').textContent = '';
+    try { await unlock($('pass').value, $('remember').checked); }
+    catch (e) { $('lock-err').textContent = /OperationError/.test(String(e.name || e)) || !e.message ? 'Wrong passphrase.' : e.message; }
+    btn.disabled = false;
+  });
+  $('forget').addEventListener('click', function () { store.clear(); location.reload(); });
+  $('congress-more').addEventListener('click', function () { showAll = !showAll; if (lastData) render(lastData); });
+  (async function () {
+    try {
+      var b = await loadBlob();
+      var saved = store.get();
+      if (b.plain || saved) await unlock(saved, false);
+    } catch (e) { if (!$('lock').hidden) $('lock-err').textContent = store.get() ? 'Saved passphrase no longer works.' : ''; store.clear(); }
+  })();
+})();
+</script>
+</body>
+</html>
